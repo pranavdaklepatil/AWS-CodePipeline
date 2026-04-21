@@ -51,3 +51,44 @@ variable "db_master_password" {
   type        = string
   sensitive   = true
 }
+
+variable "pipeline_artifacts_bucket_name" {
+  description = "S3 bucket for pipeline artifacts"
+  type        = string
+}
+
+variable "frontend_ecr_repo" {
+  description = "Frontend ECR repo URL"
+  type        = string
+}
+
+variable "backend_ecr_repo" {
+  description = "Backend ECR repo URL"
+  type        = string
+}
+
+variable "eks_cluster_name" {
+  description = "EKS cluster name"
+  type        = string
+}
+
+variable "docdb_endpoint" {
+  description = "DocumentDB endpoint"
+  type        = string
+}
+
+variable "github_connection_arn" {
+  description = "CodeStar connection ARN"
+  type        = string
+}
+
+variable "repository_name" {
+  description = "GitHub repo (owner/repo)"
+  type        = string
+}
+
+variable "branch_name" {
+  description = "Branch name"
+  type        = string
+  default     = "main"
+}
