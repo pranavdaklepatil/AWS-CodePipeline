@@ -19,6 +19,10 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 
   #Hardcoded From backend-bootstrap/terraform.tfvars --dont forget to make these match!
