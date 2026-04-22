@@ -16,6 +16,29 @@ variable "environment" {
   default     = "dev"
 }
 
+# Backend variables --------------------------------------------
+variable "backend_bucket_name" {
+  description = "S3 bucket for Terraform state"
+  type        = string
+}
+
+variable "backend_key" {
+  description = "State file path"
+  type        = string
+  default     = "infra/terraform.tfstate"
+}
+
+variable "backend_region" {
+  description = "Backend region"
+  type        = string
+  default     = "ap-south-1"
+}
+
+variable "backend_dynamodb_table" {
+  description = "DynamoDB table for locking"
+  type        = string
+}
+# ----------------------------------------------------------------
 variable "vpc_cidr" {
   description = "VPC CIDR block"
   type        = string
@@ -92,3 +115,4 @@ variable "branch_name" {
   type        = string
   default     = "main"
 }
+
