@@ -3,6 +3,13 @@ environment  = "dev"
 
 aws_region = "us-east-1"
 
+# Backend configuration variables ------------------------------------------------
+backend_bucket_name     = "medgrid-terraform-state1234"
+backend_key             = "infra/terraform.tfstate"
+backend_region          = "ap-south-1"
+backend_dynamodb_table  = "medgrid-terraform-locks"
+# --------------------------------------------------------------------------------
+
 vpc_cidr = "10.0.0.0/16"
 public_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
 private_subnets = ["10.0.10.0/24", "10.0.11.0/24"]
