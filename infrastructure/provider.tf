@@ -25,13 +25,12 @@ terraform {
     }
   }
 
-  #Hardcoded From backend-bootstrap/terraform.tfvars --dont forget to make these match!
   backend "s3" {
-    bucket         = "medgrid-terraform-state1234"
-    key            = "infra/terraform.tfstate"
-    region         = "ap-south-1"
-    encrypt        = true                          # AES-256 at rest
-    dynamodb_table = "medgrid-terraform-locks"   # prevents concurrent applies
+    bucket         = var.backend_bucket_name
+    key            = var.backend_key
+    region         = var.backend_region
+    encrypt        = true
+    dynamodb_table = var.backend_dynamodb_table
   }
 }
 
