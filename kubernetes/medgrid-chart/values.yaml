@@ -1,0 +1,69 @@
+frontend:
+  replicaCount: 2
+
+  image:
+    repository: ""   # injected from pipeline
+    tag: "latest"
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  env:
+    VITE_API_URL: "http://medgrid.example.com/api"
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+backend:
+  replicaCount: 2
+
+  image:
+    repository: ""   # injected from pipeline
+    tag: "latest"
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 5000
+
+  env:
+    PORT: "5000"
+    NODE_ENV: "production"
+
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+
+ingress:
+  enabled: true
+  className: "alb"
+
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+
+  hosts:
+    - host: medgrid.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          backend: backend
+        - path: /
+          pathType: Prefix
+          backend: frontend
+
+# Mongo config (NO PASSWORD HERE)
+mongodb:
+  uri: ""         # injected from Terraform output
+  username: "medgridadmin"
