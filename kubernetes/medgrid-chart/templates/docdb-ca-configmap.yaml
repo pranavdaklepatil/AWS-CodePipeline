@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docdb-ca-bundle
+  namespace: {{ .Release.Namespace }}
+data:
+  rds-combined-ca-bundle.pem: |
+    -----BEGIN CERTIFICATE-----
+    # 🔴 IMPORTANT: Replace with actual AWS CA bundle content
+    # Download from:
+    # https://docs.aws.amazon.com/documentdb/latest/developerguide/security.encryption.ssl.html
+    -----END CERTIFICATE-----
