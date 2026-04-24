@@ -16,7 +16,7 @@ variable "environment" {
   default     = "dev"
 }
 
-# Backend variables --------------------------------------------
+# Backend state
 variable "backend_bucket_name" {
   description = "S3 bucket for Terraform state"
   type        = string
@@ -38,7 +38,8 @@ variable "backend_dynamodb_table" {
   description = "DynamoDB table for locking"
   type        = string
 }
-# ----------------------------------------------------------------
+
+# Network
 variable "vpc_cidr" {
   description = "VPC CIDR block"
   type        = string
@@ -57,13 +58,9 @@ variable "private_subnets" {
   default     = ["10.0.10.0/24", "10.0.11.0/24"]
 }
 
+# CI/CD
 variable "pipeline_artifacts_bucket_name" {
   description = "S3 bucket for pipeline artifacts"
-  type        = string
-}
-
-variable "docdb_endpoint" {
-  description = "DocumentDB endpoint"
   type        = string
 }
 
@@ -83,14 +80,14 @@ variable "branch_name" {
   default     = "main"
 }
 
-# EkS Cluster variables ------------------------------------------------
+# EKS
 variable "eks_cluster_name" {
   description = "EKS cluster name"
   type        = string
 }
 
 variable "eks_cluster_version" {
-  description = "EKS cluster Kubernetes version"
+  description = "EKS cluster version"
   type        = string
   default     = "1.28"
 }
@@ -108,140 +105,101 @@ variable "enable_irsa" {
 }
 
 variable "node_group_name" {
-  description = "Name of node group"
-  type        = string
-  default     = "main-node-group"
+  type    = string
+  default = "main-node-group"
 }
 
 variable "node_min_size" {
-  description = "Minimum nodes"
-  type        = number
-  default     = 2
+  type    = number
+  default = 2
 }
 
 variable "node_max_size" {
-  description = "Maximum nodes"
-  type        = number
-  default     = 4
+  type    = number
+  default = 4
 }
 
 variable "node_desired_size" {
-  description = "Desired nodes"
-  type        = number
-  default     = 2
+  type    = number
+  default = 2
 }
 
 variable "node_instance_types" {
-  description = "Instance types for worker nodes"
-  type        = list(string)
-  default     = ["t3.medium"]
+  type    = list(string)
+  default = ["t3.medium"]
 }
 
 variable "node_disk_size" {
-  description = "Disk size in GB"
-  type        = number
-  default     = 20
+  type    = number
+  default = 20
 }
 
-# ECR variables ------------------------------------------------
+# ECR
 variable "ecr_frontend_name" {
-  description = "ECR repository name for frontend"
-  type        = string
-}
-
-variable "ecr_backend_name" {
-  description = "ECR repository name for backend"
-  type        = string
-}
-
-variable "ecr_image_tag_mutability" {
-  description = "ECR image tag mutability"
-  type        = string
-  default     = "MUTABLE"
-}
-
-variable "ecr_scan_on_push" {
-  description = "Enable image scan on push"
-  type        = bool
-  default     = true
-}
-
-variable "frontend_ecr_repo" {
-  description = "Frontend ECR repo URL"
-  type        = string
-}
-
-variable "backend_ecr_repo" {
-  description = "Backend ECR repo URL"
-  type        = string
-}
-
-# DocumentDB variables ------------------------------------------------
-variable "docdb_subnet_group_name" {
-  description = "DocumentDB subnet group name"
-  type        = string
-}
-
-variable "docdb_sg_name" {
-  description = "Security group name for DocumentDB"
-  type        = string
-}
-
-variable "docdb_sg_description" {
-  description = "Security group description"
-  type        = string
-  default     = "Allow DocumentDB traffic"
-}
-
-variable "docdb_port" {
-  description = "DocumentDB port"
-  type        = number
-  default     = 27017
-}
-
-variable "docdb_allowed_cidr_blocks" {
-  description = "Allowed CIDR blocks for DocumentDB access"
-  type        = list(string)
-}
-
-variable "docdb_cluster_identifier" {
-  description = "DocumentDB cluster identifier"
-  type        = string
-}
-
-variable "docdb_engine" {
-  description = "DocumentDB engine"
-  type        = string
-  default     = "docdb"
-}
-
-variable "docdb_skip_final_snapshot" {
-  description = "Skip final snapshot on delete"
-  type        = bool
-  default     = true
-}
-
-variable "docdb_instance_count" {
-  description = "Number of DocumentDB instances"
-  type        = number
-  default     = 1
-}
-
-variable "docdb_instance_identifier_prefix" {
-  description = "Prefix for instance identifier"
-  type        = string
-}
-
-# Already existing (keep them)
-variable "db_master_username" {
   type = string
 }
 
-variable "db_master_password" {
-  type      = string
-  sensitive = true
+variable "ecr_backend_name" {
+  type = string
 }
 
+variable "ecr_image_tag_mutability" {
+  type    = string
+  default = "MUTABLE"
+}
+
+variable "ecr_scan_on_push" {
+  type    = bool
+  default = true
+}
+
+# DocumentDB (NO PASSWORD VARIABLES ANYMORE)
+variable "docdb_subnet_group_name" {
+  type = string
+}
+
+variable "docdb_sg_name" {
+  type = string
+}
+
+variable "docdb_sg_description" {
+  type    = string
+  default = "Allow DocumentDB traffic"
+}
+
+variable "docdb_port" {
+  type    = number
+  default = 27017
+}
+
+variable "docdb_allowed_cidr_blocks" {
+  type = list(string)
+}
+
+variable "docdb_cluster_identifier" {
+  type = string
+}
+
+variable "docdb_engine" {
+  type    = string
+  default = "docdb"
+}
+
+variable "docdb_skip_final_snapshot" {
+  type    = bool
+  default = true
+}
+
+variable "docdb_instance_count" {
+  type    = number
+  default = 1
+}
+
+variable "docdb_instance_identifier_prefix" {
+  type = string
+}
+
+# ONLY INSTANCE CLASS REMAINS
 variable "db_instance_class" {
   type = string
 }
