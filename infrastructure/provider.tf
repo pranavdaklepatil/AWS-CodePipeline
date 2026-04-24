@@ -15,7 +15,6 @@ terraform {
       version = "~> 2.0"
     }
     tls = {
-      # Needed to read EKS OIDC thumbprint for IRSA (used in eks.tf)
       source  = "hashicorp/tls"
       version = "~> 4.0"
     }
@@ -34,7 +33,7 @@ terraform {
   }
 }
 
-# AWS provider configuration. 
+# AWS Provider
 provider "aws" {
   region = var.aws_region
 
@@ -43,12 +42,11 @@ provider "aws" {
       Project     = var.project_name
       Environment = var.environment
       ManagedBy   = "Terraform"
-      Repository  = "github.com/your-org/medgrid"
     }
   }
 }
 
-# Kubernetes provider
+#  Kubernetes Provider (EKS)
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
@@ -64,9 +62,7 @@ provider "kubernetes" {
   }
 }
 
-
-# Helm provider
-# Shares the same authentication as the Kubernetes provider.
+#  Helm Provider (uses same EKS auth)
 provider "helm" {
   kubernetes {
     host                   = module.eks.cluster_endpoint
