@@ -1,21 +1,47 @@
-data "aws_secretsmanager_secret_version" "docdb" {
-  secret_id = "medgrid/docdb"
+# Generate password
+resource "random_password" "docdb_password" {
+  length           = 32
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-locals {
-  docdb_secret = jsondecode(data.aws_secretsmanager_secret_version.docdb.secret_string)
-}
+# Secrets Manager
+resource "aws_secretsmanager_secret" "docdb" {
+  name                    = "${var.project_name}/docdb/credentials"
+  recovery_window_in_days = 0
 
-resource "aws_docdb_subnet_group" "main" {
-  name       = var.docdb_subnet_group_name
-  subnet_ids = module.vpc.private_subnets
-  
-   tags = {
-    Name        = "${var.project_name}-docdb-sg"
+  tags = {
+    Name        = "${var.project_name}-docdb-secret"
     Environment = var.environment
   }
 }
 
+resource "aws_secretsmanager_secret_version" "docdb" {
+  secret_id = aws_secretsmanager_secret.docdb.id
+
+  secret_string = jsonencode({
+    username = "medgridadmin"
+    password = random_password.docdb_password.result
+    host     = aws_docdb_cluster.main.endpoint
+    port     = 27017
+    dbname   = "medgrid"
+
+    uri = "mongodb://medgridadmin:${random_password.docdb_password.result}@${aws_docdb_cluster.main.endpoint}:27017/medgrid?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
+  })
+}
+
+# Subnet Group
+resource "aws_docdb_subnet_group" "main" {
+  name       = var.docdb_subnet_group_name
+  subnet_ids = module.vpc.private_subnets
+
+  tags = {
+    Name        = "${var.project_name}-docdb-subnet-group"
+    Environment = var.environment
+  }
+}
+
+# Security Group
 resource "aws_security_group" "docdb" {
   name        = var.docdb_sg_name
   description = var.docdb_sg_description
@@ -35,30 +61,36 @@ resource "aws_security_group" "docdb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-   tags = {
+  tags = {
     Name        = "${var.project_name}-docdb-sg"
     Environment = var.environment
   }
 }
 
+# DocumentDB Cluster
 resource "aws_docdb_cluster" "main" {
-  cluster_identifier      = var.docdb_cluster_identifier
-  engine                  = var.docdb_engine
+  cluster_identifier = var.docdb_cluster_identifier
+  engine             = var.docdb_engine
 
-  master_username = local.docdb_secret.username
-  master_password = local.docdb_secret.password
+  master_username = "medgridadmin"
+
+  # ✅ IMPORTANT: use generated password
+  master_password = random_password.docdb_password.result
 
   db_subnet_group_name   = aws_docdb_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.docdb.id]
-  skip_final_snapshot    = var.docdb_skip_final_snapshot
+
+  skip_final_snapshot = var.docdb_skip_final_snapshot
 
   tags = {
-    Name        = "${var.project_name}-docdb-cluster"
+    Name        = "${var.project_name}-docdb"
     Environment = var.environment
   }
 
+  depends_on = [aws_secretsmanager_secret.docdb]
 }
 
+# DocumentDB Instances
 resource "aws_docdb_cluster_instance" "main" {
   count              = var.docdb_instance_count
   identifier         = "${var.docdb_instance_identifier_prefix}-${count.index}"
