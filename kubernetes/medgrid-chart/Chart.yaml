@@ -1,6 +1,6 @@
 apiVersion: v2
 name: medgrid-chart
-description: A Helm chart for MedGrid Hospital Management System
+description: MedGrid Hospital Management System - Kubernetes Helm Chart
 type: application
 version: 0.1.0
 appVersion: "1.0.0"
