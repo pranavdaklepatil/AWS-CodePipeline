@@ -9,46 +9,53 @@ phases:
       - curl -LO https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl
       - chmod +x ./kubectl
       - mv ./kubectl /usr/local/bin/kubectl
-      - curl -fsSL -o get_helm.sh
-        https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+
+      - curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
       - chmod 700 get_helm.sh
       - ./get_helm.sh
+
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login
-        --username AWS --password-stdin $FRONTEND_ECR_REPO
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login
-        --username AWS --password-stdin $BACKEND_ECR_REPO
+
+      - ACCOUNT_ID=$(echo $FRONTEND_ECR_REPO | cut -d'/' -f1)
+      - REGISTRY="$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
+
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REGISTRY
+
       - REPOSITORY_URI_FRONTEND=$FRONTEND_ECR_REPO
       - REPOSITORY_URI_BACKEND=$BACKEND_ECR_REPO
+
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
+
   build:
     commands:
       - echo Build started on `date`
-      - echo Building the Frontend Docker image...
+
+      - echo Building Frontend image...
       - docker build -t $REPOSITORY_URI_FRONTEND:latest application/frontend
-      - docker tag $REPOSITORY_URI_FRONTEND:latest
-        $REPOSITORY_URI_FRONTEND:$IMAGE_TAG
-      - echo Building the Backend Docker image...
+      - docker tag $REPOSITORY_URI_FRONTEND:latest $REPOSITORY_URI_FRONTEND:$IMAGE_TAG
+
+      - echo Building Backend image...
       - docker build -t $REPOSITORY_URI_BACKEND:latest application/backend
-      - docker tag $REPOSITORY_URI_BACKEND:latest
-        $REPOSITORY_URI_BACKEND:$IMAGE_TAG
+      - docker tag $REPOSITORY_URI_BACKEND:latest $REPOSITORY_URI_BACKEND:$IMAGE_TAG
+
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Pushing the Docker images...
+
+      - echo Pushing images...
       - docker push $REPOSITORY_URI_FRONTEND:latest
       - docker push $REPOSITORY_URI_FRONTEND:$IMAGE_TAG
       - docker push $REPOSITORY_URI_BACKEND:latest
       - docker push $REPOSITORY_URI_BACKEND:$IMAGE_TAG
-      - echo Updating Kubeconfig...
-      - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region
-        $AWS_DEFAULT_REGION
+
+      - echo Updating kubeconfig...
+      - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_DEFAULT_REGION
+
       - echo Deploying to EKS via Helm...
-      - | # Use a multi-line command for Helm to pass all variables
-        helm upgrade --install medgrid ./kubernetes/medgrid-chart \
+      - helm upgrade --install medgrid ./kubernetes/medgrid-chart \
           --set frontend.image.repository=$REPOSITORY_URI_FRONTEND \
           --set frontend.image.tag=$IMAGE_TAG \
           --set backend.image.repository=$REPOSITORY_URI_BACKEND \
