@@ -1,28 +1,73 @@
-{{- if .Values.ingress.enabled -}}
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ include "medgrid-chart.fullname" . }}-ingress
-  namespace: {{ .Release.Namespace }}
+frontend:
+  replicaCount: 2
+
+  image:
+    repository: ""   # injected from pipeline
+    tag: "latest"
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  env:
+    VITE_API_URL: "http://medgrid.example.com/api"
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+backend:
+  replicaCount: 2
+
+  image:
+    repository: ""   # injected from pipeline
+    tag: "latest"
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 5000
+
+  env:
+    PORT: "5000"
+    NODE_ENV: "production"
+
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+
+########################################
+# Ingress (ALB)
+########################################
+ingress:
+  enabled: true
+  className: "alb"
+
   annotations:
-    {{- range $key, $value := .Values.ingress.annotations }}
-    {{ $key }}: {{ $value | quote }}
-    {{- end }}
-spec:
-  ingressClassName: {{ .Values.ingress.className }}
-  rules:
-    {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
-      http:
-        paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType }}
-            backend:
-              service:
-                name: {{ include "medgrid-chart.fullname" $ }}-{{ .backend }}
-                port:
-                  number: {{ if eq .backend "backend" }}{{ $.Values.backend.service.port }}{{ else }}{{ $.Values.frontend.service.port }}{{ end }}
-          {{- end }}
-    {{- end }}
-{{- end }}
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/success-codes: "200"
+
+  hosts:
+    - host: medgrid.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          backend: backend
+        - path: /
+          pathType: Prefix
+          backend: frontend
+
+########################################
+# REMOVE Mongo completely (IMPORTANT)
+########################################
