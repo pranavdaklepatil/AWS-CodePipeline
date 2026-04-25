@@ -21,6 +21,10 @@ module "eks" {
       instance_types = var.node_instance_types
       disk_size      = var.node_disk_size
 
+      # ✅ FIX FOR AMI ERROR (IMPORTANT)
+      ami_type       = "AL2_x86_64"
+      capacity_type  = "ON_DEMAND"
+
       tags = {
         "k8s.io/cluster-autoscaler/enabled" = "true"
       }
