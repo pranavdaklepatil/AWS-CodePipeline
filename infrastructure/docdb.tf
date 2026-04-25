@@ -1,14 +1,14 @@
-# Generate password
-resource "random_password" "docdb_password" {
+# Generate Secure Password
+resource "random_password" "docdb" {
   length           = 32
   special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-# Secrets Manager
+# AWS Secrets Manager - Store Credentials
 resource "aws_secretsmanager_secret" "docdb" {
-  name                    = "${var.project_name}/docdb/credentials"
-  recovery_window_in_days = 0
+  name        = "${var.project_name}/docdb"
+  description = "DocumentDB credentials for MedGrid"
 
   tags = {
     Name        = "${var.project_name}-docdb-secret"
@@ -21,12 +21,7 @@ resource "aws_secretsmanager_secret_version" "docdb" {
 
   secret_string = jsonencode({
     username = "medgridadmin"
-    password = random_password.docdb_password.result
-    host     = aws_docdb_cluster.main.endpoint
-    port     = 27017
-    dbname   = "medgrid"
-
-    uri = "mongodb://medgridadmin:${random_password.docdb_password.result}@${aws_docdb_cluster.main.endpoint}:27017/medgrid?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
+    password = random_password.docdb.result
   })
 }
 
@@ -73,9 +68,7 @@ resource "aws_docdb_cluster" "main" {
   engine             = var.docdb_engine
 
   master_username = "medgridadmin"
-
-  # ✅ IMPORTANT: use generated password
-  master_password = random_password.docdb_password.result
+  master_password = random_password.docdb.result
 
   db_subnet_group_name   = aws_docdb_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.docdb.id]
@@ -83,7 +76,7 @@ resource "aws_docdb_cluster" "main" {
   skip_final_snapshot = var.docdb_skip_final_snapshot
 
   tags = {
-    Name        = "${var.project_name}-docdb"
+    Name        = "${var.project_name}-docdb-cluster"
     Environment = var.environment
   }
 
