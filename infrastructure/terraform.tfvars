@@ -23,7 +23,7 @@ branch_name          = "main"
 
 # EKS
 eks_cluster_name              = "medgrid-eks-cluster"
-eks_cluster_version           = "1.28"
+eks_cluster_version           = "1.29"
 cluster_endpoint_public_access = true
 enable_irsa                   = true
 
