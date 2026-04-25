@@ -31,7 +31,7 @@ variable "backend_key" {
 variable "backend_region" {
   description = "Backend region"
   type        = string
-  default     = "ap-south-1"
+  default     = "us-east-1"
 }
 
 variable "backend_dynamodb_table" {
