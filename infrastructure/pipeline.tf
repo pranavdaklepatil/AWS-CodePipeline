@@ -178,7 +178,7 @@ resource "aws_codepipeline" "medgrid_pipeline" {
     name = "Build"
 
     action {
-      name             = "Build"
+      name             = "BuildAndDeploy"
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
@@ -192,23 +192,4 @@ resource "aws_codepipeline" "medgrid_pipeline" {
     }
   }
 
-  ########################################
-  # Deploy Stage
-  ########################################
-  stage {
-    name = "Deploy"
-
-    action {
-      name            = "Deploy"
-      category        = "Deploy"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["build_output"]
-      version         = "1"
-
-      configuration = {
-        ProjectName = aws_codebuild_project.medgrid_build.name
-      }
-    }
-  }
 }
