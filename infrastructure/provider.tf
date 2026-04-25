@@ -24,13 +24,8 @@ terraform {
     }
   }
 
-  backend "s3" {
-    bucket         = var.backend_bucket_name
-    key            = var.backend_key
-    region         = var.backend_region
-    encrypt        = true
-    dynamodb_table = var.backend_dynamodb_table
-  }
+  # Backend config in backend.hcl
+  backend "s3" {}
 }
 
 # AWS Provider
@@ -46,7 +41,7 @@ provider "aws" {
   }
 }
 
-#  Kubernetes Provider (EKS)
+# Kubernetes Provider (EKS)
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
@@ -62,7 +57,7 @@ provider "kubernetes" {
   }
 }
 
-#  Helm Provider (uses same EKS auth)
+# Helm Provider
 provider "helm" {
   kubernetes {
     host                   = module.eks.cluster_endpoint
