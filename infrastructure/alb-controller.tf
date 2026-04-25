@@ -1,4 +1,4 @@
-# IAM Policy for ALB Controller
+# IAM Role for ALB Controller (IRSA)
 data "aws_iam_policy_document" "alb_controller_assume_role" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
@@ -22,8 +22,7 @@ resource "aws_iam_role" "alb_controller" {
 }
 
 resource "aws_iam_policy" "alb_controller" {
-  name = "${var.project_name}-alb-controller-policy"
-
+  name   = "${var.project_name}-alb-controller-policy"
   policy = file("${path.module}/alb-policy.json")
 }
 
