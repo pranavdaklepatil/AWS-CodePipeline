@@ -225,7 +225,7 @@ Managed Kubernetes cluster running the MedGrid application:
 
 | Variable | Default | What It Controls |
 |:---|:---:|:---|
-| `aws_region` | `ap-south-1` | Region for all AWS resources |
+| `aws_region` | `us-east-1` | Region for all AWS resources |
 | `aws_account_id` | _(your account)_ | Used in ECR URIs, IAM ARNs, S3 names |
 | `project_name` | `medgrid` | Prefix for **every** resource name |
 | `environment` | `dev` | Sizing, tagging, and isolation per env |
