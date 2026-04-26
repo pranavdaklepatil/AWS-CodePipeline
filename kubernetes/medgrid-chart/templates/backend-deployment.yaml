@@ -22,11 +22,11 @@ spec:
           ports:
             - containerPort: {{ .Values.backend.service.port }}
           env:
-            - name: MONGO_URI
+            - name: MONGODB_URI
               valueFrom:
                 secretKeyRef:
                   name: medgrid-secret
-                  key: MONGO_URI
+                  key: MONGODB_URI
             {{- range $key, $value := .Values.backend.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
