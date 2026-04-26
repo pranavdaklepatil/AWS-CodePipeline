@@ -11,7 +11,7 @@ frontend:
     port: 80
 
   env:
-    VITE_API_URL: "http://medgrid.example.com/api"
+    VITE_API_URL: "http://localhost:5000/api"
 
   resources:
     requests:
