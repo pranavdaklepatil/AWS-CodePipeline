@@ -40,7 +40,7 @@ provider "aws" {
   }
 }
 
-# Kubernetes Provider (CORRECT)
+# Kubernetes Provider
 provider "kubernetes" {
   host = module.eks.cluster_endpoint
 
@@ -59,7 +59,7 @@ provider "kubernetes" {
   }
 }
 
-# Helm Provider (CORRECT)
+# Helm Provider
 provider "helm" {
   kubernetes {
     host = module.eks.cluster_endpoint
