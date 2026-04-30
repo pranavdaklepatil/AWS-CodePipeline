@@ -24,8 +24,7 @@ terraform {
     }
   }
 
-  # Backend config in backend.hcl
-  backend "s3" {}
+  backend "s3" {}  # Provide backend configuration from backend.hcl like terraform init -backend-config=backend.hcl
 }
 
 # AWS Provider
@@ -41,10 +40,13 @@ provider "aws" {
   }
 }
 
-# Kubernetes Provider (EKS)
+# Kubernetes Provider (CORRECT)
 provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  host = module.eks.cluster_endpoint
+
+  cluster_ca_certificate = base64decode(
+    module.eks.cluster_certificate_authority_data
+  )
 
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
@@ -52,16 +54,19 @@ provider "kubernetes" {
     args = [
       "eks", "get-token",
       "--cluster-name", module.eks.cluster_name,
-      "--region",       var.aws_region,
+      "--region", var.aws_region
     ]
   }
 }
 
-# Helm Provider
+# Helm Provider (CORRECT)
 provider "helm" {
   kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+    host = module.eks.cluster_endpoint
+
+    cluster_ca_certificate = base64decode(
+      module.eks.cluster_certificate_authority_data
+    )
 
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
@@ -69,7 +74,7 @@ provider "helm" {
       args = [
         "eks", "get-token",
         "--cluster-name", module.eks.cluster_name,
-        "--region",       var.aws_region,
+        "--region", var.aws_region
       ]
     }
   }
