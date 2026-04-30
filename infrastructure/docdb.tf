@@ -1,33 +1,18 @@
-# Generate Secure Password
-resource "random_password" "docdb" {
-  length           = 32
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
-}
-
-# AWS Secrets Manager - Store Credentials
-resource "aws_secretsmanager_secret" "docdb" {
-  name        = "${var.project_name}/docdb"
-  description = "DocumentDB credentials for MedGrid"
+# KMS KEY (ENCRYPTION)
+resource "aws_kms_key" "docdb" {
+  description             = "KMS key for DocDB encryption"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
 
   tags = {
-    Name        = "${var.project_name}-docdb-secret"
+    Name        = "${var.project_name}-kms"
     Environment = var.environment
   }
 }
 
-resource "aws_secretsmanager_secret_version" "docdb" {
-  secret_id = aws_secretsmanager_secret.docdb.id
-
-  secret_string = jsonencode({
-    username = "medgridadmin"
-    password = random_password.docdb.result
-  })
-}
-
-# Subnet Group
+# SUBNET GROUP
 resource "aws_docdb_subnet_group" "main" {
-  name       = var.docdb_subnet_group_name
+  name       = "${var.project_name}-docdb-subnet-group"
   subnet_ids = module.vpc.private_subnets
 
   tags = {
@@ -36,17 +21,17 @@ resource "aws_docdb_subnet_group" "main" {
   }
 }
 
-# Security Group
+# SECURITY GROUP
 resource "aws_security_group" "docdb" {
-  name        = var.docdb_sg_name
-  description = var.docdb_sg_description
+  name        = "${var.project_name}-docdb-sg"
+  description = " Allow Ingress and egress for DocumentDB"
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    from_port   = var.docdb_port
-    to_port     = var.docdb_port
-    protocol    = "tcp"
-    cidr_blocks = var.docdb_allowed_cidr_blocks
+    from_port       = var.docdb_port
+    to_port         = var.docdb_port
+    protocol        = "tcp"
+    security_groups = var.allowed_security_groups
   }
 
   egress {
@@ -62,16 +47,48 @@ resource "aws_security_group" "docdb" {
   }
 }
 
-# DocumentDB Cluster
+resource "aws_docdb_cluster_parameter_group" "main" {
+  name   = "${var.project_name}-docdb-params"
+  family = "${var.project_name}-docdb-family"
+
+  parameter {
+    name  = "tls"
+    value = "enabled"
+  }
+
+  tags = {
+    Name        = "${var.project_name}-docdb-params"
+    Environment = var.environment
+  }
+}
+
+# DOCDB CLUSTER
 resource "aws_docdb_cluster" "main" {
   cluster_identifier = var.docdb_cluster_identifier
   engine             = var.docdb_engine
+  engine_version     = "4.0.0"
 
-  master_username = "medgridadmin"
+  master_username = var.docdb_username
   master_password = random_password.docdb.result
 
-  db_subnet_group_name   = aws_docdb_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.docdb.id]
+  db_subnet_group_name            = aws_docdb_subnet_group.main.name
+  vpc_security_group_ids          = [aws_security_group.docdb.id]
+  db_cluster_parameter_group_name = aws_docdb_cluster_parameter_group.main.name
+
+  # SECURITY
+  storage_encrypted   = true
+  kms_key_id          = aws_kms_key.docdb.arn
+  deletion_protection = true
+
+  # BACKUP
+  backup_retention_period = 7
+  preferred_backup_window = "07:00-09:00"
+
+  # MAINTENANCE
+  preferred_maintenance_window = "sun:05:00-sun:07:00"
+
+  # LOGGING
+  enabled_cloudwatch_logs_exports = ["audit", "profiler"]
 
   skip_final_snapshot = var.docdb_skip_final_snapshot
 
@@ -83,7 +100,7 @@ resource "aws_docdb_cluster" "main" {
   depends_on = [aws_secretsmanager_secret.docdb]
 }
 
-# DocumentDB Instances
+# INSTANCES
 resource "aws_docdb_cluster_instance" "main" {
   count              = var.docdb_instance_count
   identifier         = "${var.docdb_instance_identifier_prefix}-${count.index}"
